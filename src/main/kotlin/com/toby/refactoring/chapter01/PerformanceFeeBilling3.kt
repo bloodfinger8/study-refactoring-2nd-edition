@@ -4,29 +4,16 @@ import java.text.NumberFormat
 import java.util.*
 
 
-
-fun statement3(invoice: Invoice, plays: Map<String, Play>): String {
-    val statementData = StatementData3(
-        invoice.customer,
-        invoice.performances.stream()
-            .map {
-                Performance3(
-                    playFor3(it, plays),
-                    it.audience,
-                    amountFor3(playFor3(it, plays), Performance3(playFor3(it, plays), it.audience)),
-                    volumeCreditsFor3(Performance3(playFor3(it, plays), it.audience), plays)
-                )
-            }
-            
-            .toList()
-    )
-    return renderPlainText3(statementData, plays)
-}
-
 data class StatementData3(
     var customer: String,
-    var performances: List<Performance3>
+    var performances: List<Performance3>,
+    var totalAmount: Int = 0,
+    var totalVolumeCredits: Int = 0
 ) {
+    fun setTotalValue() {
+        totalAmount = this.performances.map { it.amount }.reduce { acc, i -> acc + i }
+        totalVolumeCredits = this.performances.map { it.volumeCredits }.reduce { acc, i -> acc + i }
+    }
 }
 
 data class Performance3(
@@ -34,8 +21,28 @@ data class Performance3(
     var audience: Int,
     val amount: Int = 0,
     val volumeCredits: Int = 0
-) {
-    constructor() : this(Play("",""), 0)
+)
+
+
+fun statement3(invoice: Invoice, plays: Map<String, Play>): String {
+    return renderPlainText3(createStatementData(invoice, plays))
+}
+
+private fun createStatementData(invoice: Invoice, plays: Map<String, Play>): StatementData3 {
+    val statementData3 = StatementData3(
+        invoice.customer,
+        invoice.performances.stream()
+            .map {
+                Performance3(
+                    playFor3(it, plays),
+                    it.audience,
+                    amountFor3(playFor3(it, plays), Performance3(playFor3(it, plays), it.audience)),
+                    volumeCreditsFor3(Performance3(playFor3(it, plays), it.audience))
+                )
+            }.toList()
+    )
+    statementData3.setTotalValue()
+    return statementData3
 }
 
 
@@ -43,40 +50,21 @@ private fun playFor3(aPerformance: Performance, plays: Map<String, Play>): Play 
     plays[aPerformance.playID] ?: throw IllegalArgumentException("해당 ID의 공연 정보를 찾을 수 없습니다: ${aPerformance.playID}")
 
 
-private fun renderPlainText3(data: StatementData3, plays: Map<String, Play>): String {
+private fun renderPlainText3(data: StatementData3): String {
     var result = "청구내역 (고객명: ${data.customer})\n";
 
     for (perf in data.performances) {
         result += " ${perf.play.name}: ${usd3(perf.amount)} (${perf.audience}석)\n"
     }
 
-    result += "총액: ${usd3(totalAmount3(data, plays))}\n"
-    result += "적립 포인트: ${totalVolumeCredits3(data, plays)}점"
+    result += "총액: ${usd3(data.totalAmount)}\n"
+    result += "적립 포인트: ${data.totalVolumeCredits}점"
     return result
 }
 
+private fun usd3(it: Int): String? = NumberFormat.getCurrencyInstance(Locale.US).apply { minimumFractionDigits = 2 }.format(it/100)
 
-private fun totalAmount3(data: StatementData3, plays: Map<String, Play>):Int {
-    var result = 0
-    for (perf in data.performances) {
-        result += perf.amount
-    }
-    return result
-}
-
-private fun totalVolumeCredits3(data: StatementData3, plays: Map<String, Play>): Int {
-    var result = 0
-    for (perf in data.performances) {
-        result += perf.volumeCredits
-    }
-    return result
-}
-
-private fun usd3(it: Int): String? = NumberFormat.getCurrencyInstance(Locale.US).apply {
-    minimumFractionDigits = 2
-}.format(it/100)
-
-private fun volumeCreditsFor3(perf: Performance3, plays: Map<String, Play>): Int {
+private fun volumeCreditsFor3(perf: Performance3): Int {
     var result = 0
     result += Math.max(perf.audience - 30, 0)
     if (perf.play.type == "comedy") {
