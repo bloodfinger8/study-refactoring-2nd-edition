@@ -5,15 +5,16 @@ import java.util.*
 
 
 
-fun statement2(invoice: Invoice, plays: Map<String, Play>) {
-    println("청구내역 (고객명: ${invoice.customer})")
+fun statement2(invoice: Invoice, plays: Map<String, Play>): String {
+    var result = "청구내역 (고객명: ${invoice.customer})\n"
 
     for (perf in invoice.performances) {
-        println(" ${playFor(perf, plays).name}: ${usd(amountFor(playFor(perf, plays), perf))} (${perf.audience}석)")
+        result += " ${playFor(perf, plays).name}: ${usd(amountFor(playFor(perf, plays), perf))} (${perf.audience}석)\n"
     }
 
-    println("총액: ${usd(totalAmount(invoice, plays))}")
-    println("적립 포인트: ${totalVolumeCredits(invoice, plays)}점")
+    result += "총액: ${usd(totalAmount(invoice, plays))}\n"
+    result += "적립 포인트: ${totalVolumeCredits(invoice, plays)}점"
+    return result
 }
 
 private fun totalAmount(invoice: Invoice, plays: Map<String, Play>):Int {
@@ -70,28 +71,4 @@ private fun amountFor(play: Play, aPerformance: Performance): Int {
                 throw IllegalArgumentException("알 수 없는 장르: ${play.type}")
             }
         }
-}
-
-
-
-
-
-
-fun main() {
-    val invoice = Invoice(
-        customer = "BigCo",
-        performances = listOf(
-            Performance("hamlet", 55),
-            Performance("as-like", 35),
-            Performance("othello", 40)
-        )
-    )
-
-    val plays = mapOf(
-        "hamlet" to Play("Hamlet", "tragedy"),
-        "as-like" to Play("As You Like It", "comedy"),
-        "othello" to Play("Othello", "tragedy")
-    )
-
-    statement2(invoice, plays)
 }

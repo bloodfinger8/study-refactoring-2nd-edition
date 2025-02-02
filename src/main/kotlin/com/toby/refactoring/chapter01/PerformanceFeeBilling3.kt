@@ -5,7 +5,7 @@ import java.util.*
 
 
 
-fun statement3(invoice: Invoice, plays: Map<String, Play>) {
+fun statement3(invoice: Invoice, plays: Map<String, Play>): String {
     val statementData = StatementData3(
         invoice.customer,
         invoice.performances.stream()
@@ -17,9 +17,10 @@ fun statement3(invoice: Invoice, plays: Map<String, Play>) {
                     volumeCreditsFor3(Performance3(playFor3(it, plays), it.audience), plays)
                 )
             }
+            
             .toList()
     )
-    renderPlainText3(statementData, plays)
+    return renderPlainText3(statementData, plays)
 }
 
 data class StatementData3(
@@ -42,15 +43,16 @@ private fun playFor3(aPerformance: Performance, plays: Map<String, Play>): Play 
     plays[aPerformance.playID] ?: throw IllegalArgumentException("해당 ID의 공연 정보를 찾을 수 없습니다: ${aPerformance.playID}")
 
 
-private fun renderPlainText3(data: StatementData3, plays: Map<String, Play>) {
-    println("청구내역 (고객명: ${data.customer})")
+private fun renderPlainText3(data: StatementData3, plays: Map<String, Play>): String {
+    var result = "청구내역 (고객명: ${data.customer})\n";
 
     for (perf in data.performances) {
-        println(" ${perf.play.name}: ${usd3(perf.amount)} (${perf.audience}석)")
+        result += " ${perf.play.name}: ${usd3(perf.amount)} (${perf.audience}석)\n"
     }
 
-    println("총액: ${usd3(totalAmount3(data, plays))}")
-    println("적립 포인트: ${totalVolumeCredits3(data, plays)}점")
+    result += "총액: ${usd3(totalAmount3(data, plays))}\n"
+    result += "적립 포인트: ${totalVolumeCredits3(data, plays)}점"
+    return result
 }
 
 
@@ -104,28 +106,4 @@ private fun amountFor3(play: Play, aPerformance: Performance3): Int {
                 throw IllegalArgumentException("알 수 없는 장르: ${play.type}")
             }
         }
-}
-
-
-
-
-
-
-fun main() {
-    val invoice = Invoice(
-        customer = "BigCo",
-        performances = listOf(
-            Performance("hamlet", 55),
-            Performance("as-like", 35),
-            Performance("othello", 40)
-        )
-    )
-
-    val plays = mapOf(
-        "hamlet" to Play("Hamlet", "tragedy"),
-        "as-like" to Play("As You Like It", "comedy"),
-        "othello" to Play("Othello", "tragedy")
-    )
-
-    statement2(invoice, plays)
 }

@@ -67,27 +67,7 @@ fun statement(invoice: Invoice, plays: Map<String, Play>): String {
 
     // 전체 청구 요약 정보
     result += "총액: ${format(totalAmount / 100.0)}\n"
-    result += "적립 포인트: ${volumeCredits}점\n"
+    result += "적립 포인트: ${volumeCredits}점"
 
     return result
-}
-
-
-fun main() {
-    val invoice = Invoice(
-        customer = "BigCo",
-        performances = listOf(
-            Performance("hamlet", 55),
-            Performance("as-like", 35),
-            Performance("othello", 40)
-        )
-    )
-
-    val plays = mapOf(
-        "hamlet" to Play("Hamlet", "tragedy"),
-        "as-like" to Play("As You Like It", "comedy"),
-        "othello" to Play("Othello", "tragedy")
-    )
-
-    println(statement(invoice, plays))
 }
